@@ -4,9 +4,25 @@ use tokio::sync::Semaphore;
 use reqwest::Client;
 
 
-pub async fn make_request(url: String, client: Client, sem: Arc<Semaphore>) -> Result<String, Box<dyn Error>> {
-    let _permit = sem.acquire().await?;
-    let response = client.get(url).send().await?;
-    let body = response.text().await?;
-    Ok(body)
+#[derive(Clone)]
+pub struct Request {
+    pub url: String,
+    client: Client,
+    semaphore: Arc<Semaphore>
+}
+
+impl Request {
+    pub fn new(url: String, client: Client, semaphore: Arc<Semaphore>) -> Request {
+        Request {
+            url,
+            client,
+            semaphore
+        }
+    }
+    pub async fn send(self) -> Result<String, Box<dyn Error>> {
+        let _permit = self.semaphore.acquire().await?;
+        let response = self.client.get(self.url).send().await?;
+        let status = response.status().to_string();
+        Ok(status)
+    }
 }
