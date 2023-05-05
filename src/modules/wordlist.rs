@@ -17,8 +17,8 @@ impl Wordlist {
         Ok(output)
     }
     // This is mostly for testing
-    pub fn from_range(range: std::ops::Range<i32>) -> Result<Vec<String>, Box<dyn Error>> {
+    pub fn from_range(range: std::ops::Range<i32>) -> Vec<String> {
         let output: Vec<String> = range.map(|i| i.to_string()).collect();
-        Ok(output)
+        output
     }
 }
