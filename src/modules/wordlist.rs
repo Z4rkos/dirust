@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{self, prelude::*, BufReader};
+use std::io::{prelude::*, BufReader};
 use std::error::Error;
 
 
@@ -14,6 +14,11 @@ impl Wordlist {
             let line = line?;
             output.push(line);
         }
+        Ok(output)
+    }
+    // This is mostly for testing
+    pub fn from_range(range: std::ops::Range<i32>) -> Result<Vec<String>, Box<dyn Error>> {
+        let output: Vec<String> = range.map(|i| i.to_string()).collect();
         Ok(output)
     }
 }

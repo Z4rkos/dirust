@@ -61,4 +61,10 @@ impl RequestBuilder {
         }
     }
 }
+// Shut up clippy
+impl Default for RequestBuilder {
+    fn default() -> Self {
+        RequestBuilder::new()
+    }
+}
 
