@@ -1,25 +1,23 @@
 use std::sync::Arc;
 use tokio::sync::Semaphore;
-use reqwest::Client;
 
 pub mod modules;
 use crate::modules::wordlist::Wordlist;
-use crate::modules::request::Request;
+use crate::modules::request::{RequestBuilder, Request};
 
 
 
-async fn run(sem: Arc<Semaphore>, request: Request, max_concurrent_requests: usize, wordlist: Vec<String>) {
+async fn run(request: Request, max_concurrent_requests: usize, wordlist: Vec<String>) {
     for word in wordlist {
-        let mut request = request.clone();
-        request.url = format!("{}/{}", request.url, word);
+        let request = request.clone();
 
-        let fut = request.clone().send();
+        let fut = request.send(word.clone());
         tokio::spawn(async move {
             match fut.await {
                 Ok(res) => match res {
                     ref res if res == "200 OK" => {
                         println!("/{}", {word});
-                    },
+                    }
                     _ => ()
                 },
                 Err(e) => println!("{}", e)
@@ -29,19 +27,22 @@ async fn run(sem: Arc<Semaphore>, request: Request, max_concurrent_requests: usi
 
     loop {
         tokio::task::yield_now().await;
-        if sem.available_permits() == max_concurrent_requests { break; }
+        if request.semaphore.available_permits() == max_concurrent_requests { break; }
     }
 }
 
 #[tokio::main]
 async fn main() {
     let url = String::from("http://127.0.0.1:5000");
-    let max_concurrent_requests: usize = 30;
+    let max_concurrent_requests: usize = 1;
     let wordlist = Wordlist::from_path("/home/z4/hackin/wordlists/web/directory-list-lowercase-2.3-medium.txt".to_string()).unwrap();
 
-    let sem = Arc::new(Semaphore::new(max_concurrent_requests));
-    let client = Client::new();
+    // let request = Request::new(url, client, sem.clone());
+    let request = RequestBuilder::new()
+        .url(url)
+        .semaphore(Arc::new(Semaphore::new(max_concurrent_requests)))
+        .build();
 
-    let request = Request::new(url, client, sem.clone());
-    run(sem, request, max_concurrent_requests, wordlist).await;
+    println!("{}\n{}", request.url, request.semaphore.available_permits());
+    run(request, max_concurrent_requests, wordlist).await;
 }
