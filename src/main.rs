@@ -26,4 +26,5 @@ async fn main() {
     let wordlist = Wordlist::from_path(args.wordlist_path).expect("Could not open wordlist.");
     // let wordlist = Wordlist::from_range(1..10000);
     Executor::run(request, args.max_concurrency, wordlist).await;
+    println!("\nFinished!")
 }

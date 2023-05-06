@@ -196,6 +196,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "dirust"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "crossterm",
+ "futures",
+ "indicatif",
+ "openssl",
+ "reqwest",
+ "tokio",
+]
+
+[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1266,19 +1279,6 @@ checksum = "e33b99f4b23ba3eec1a53ac264e35a755f00e966e0065077d6027c0f575b0b97"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "web_testing"
-version = "0.1.0"
-dependencies = [
- "clap",
- "crossterm",
- "futures",
- "indicatif",
- "openssl",
- "reqwest",
- "tokio",
 ]
 
 [[package]]
