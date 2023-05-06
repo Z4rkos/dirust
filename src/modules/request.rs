@@ -61,4 +61,3 @@ impl Default for RequestHandlerBuilder {
         RequestHandlerBuilder::new()
     }
 }
-

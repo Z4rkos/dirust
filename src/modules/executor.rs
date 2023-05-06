@@ -1,23 +1,25 @@
-use crate::modules::request::RequestHandler;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crossterm::execute;
-use crossterm::terminal::{Clear, ClearType};
 use std::io::{stdout, Write};
+use crossterm::{
+    execute,
+    cursor,
+    terminal::{Clear, ClearType}
+};
+
+use crate::modules::request::RequestHandler;
 
 
 pub struct Executor;
 impl Executor {
     pub async fn run(request_handler: RequestHandler, max_concurrent_requests: usize, wordlist: Vec<String>) {
         let requests_sendt = Arc::new(Mutex::new(0));
-        let mut stdout = Arc::new(Mutex::new(stdout()));
-        let word_vec: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+        let stdout = Arc::new(Mutex::new(stdout()));
         for word in wordlist {
-            let mut stdout_clone = stdout.clone();
+            let stdout_clone = stdout.clone();
 
             let request = request_handler.clone();
             let counter = requests_sendt.clone();
-            let word_vec = word_vec.clone();
 
             let fut = request.send(word.clone().to_string());
             tokio::spawn(async move {
@@ -26,40 +28,38 @@ impl Executor {
                     Ok(res) => match res {
                         ref res if res == "200 OK" => {
                             // println!("\n/{}", {&word});
-                            let stuff = format!("/{}", word);
-                            let mut locked_vec = word_vec.lock().await;
                             let mut stdout_lock = stdout_clone.lock().await;
 
-                            // clear_console();
-                            locked_vec.push(stuff);
-                            execute!(stdout_lock, Clear(ClearType::All)).unwrap();
-                            for line in locked_vec.iter() {
-                                println!("{}", line);
-                            }
+                            println!();
+                            execute!(stdout_lock, cursor::MoveUp(1)).unwrap();
+                            execute!(stdout_lock, Clear(ClearType::CurrentLine)).unwrap();
+                            println!("/{}", word);
                             
-                            let mut counter = counter.lock().await; // Acquire a lock on the counter
-                            *counter += 1; // Increment the counter
+                            let mut counter = counter.lock().await;
+                            *counter += 1; 
+                            print_counter(*counter);
                         }
                         _ => {
-                            let mut counter = counter.lock().await; // Acquire a lock on the counter
-                            *counter += 1; // Increment the counter
+                            let mut counter = counter.lock().await;
+                            *counter += 1; 
                             print_counter(*counter);
                         },
                     },
-                    Err(e) => println!("{}", e)
+                    Err(e) => {
+                        eprintln!("{}", e);
+                    }
                 }
             });
         }
         loop {
             tokio::task::yield_now().await;
-            let counter = requests_sendt.lock().await; // Acquire a lock on the counter
+            let counter = requests_sendt.lock().await;
             if request_handler.semaphore.available_permits() == max_concurrent_requests { break; }
             drop(counter);
         }
     }
 }
 fn print_counter(counter: usize) {
-    use std::io::Write;
     print!("{} requests sent\r", counter);
     std::io::stdout().flush().unwrap();
 }
