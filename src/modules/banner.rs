@@ -16,5 +16,5 @@ impl Banner {
 }
 
 fn color_print(prompt: &str, to_print: String) {
-    println!("[{}] {}{}", "?".blue(), prompt, to_print.green());
+    println!("[{}] {}{}", "?".blue(), prompt, to_print.blue());
 }

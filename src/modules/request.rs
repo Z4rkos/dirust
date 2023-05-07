@@ -15,8 +15,9 @@ impl RequestHandler {
         let url = format!("{}/{}", self.url, word);
         let response = self.client.get(url).send().await?;
         let status = response.status().to_string();
+        let code = status.get(..3).unwrap().to_string();
         // println!("{status}");
-        Ok(status)
+        Ok(code)
     }
 }
 
